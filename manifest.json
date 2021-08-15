@@ -1,0 +1,26 @@
+{
+    "name": "Pony Importer",
+    "description": "Easy way to share ponies across Pony Town!",
+    "version": "0.2",
+    "manifest_version": 2,
+    "content_scripts":[
+        {
+            "matches": ["https://pony.town/*"],
+            "js": ["content.js"]
+        }
+    ],
+    "icons": { 
+        "32": "images/logo32.png",
+        "64": "images/logo64.png"},
+    "browser_action":{
+        "default_popup": "popup.html",
+        "default_title": "Pony importer"
+    },
+    "background": {
+        "scripts": ["bgp.js"],
+        "persistent": true
+      },
+    "permissions": [
+        "https://pony.town/*", "webRequest"
+      ]
+}
