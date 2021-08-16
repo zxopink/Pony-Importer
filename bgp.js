@@ -39,3 +39,25 @@
     },
     {urls: ["https://pony.town/*"]}, ['requestBody']
   );
+
+  chrome.webRequest.onBeforeSendHeaders.addListener(
+    function(object) {
+        if(object.method == "POST" &&
+        object.initiator == "https://pony.town")
+        {
+            if(object.url != "https://pony.town/api/pony/save")
+                return;
+
+            var apiVer;
+            const headers = object.requestHeaders;
+            for (let index = 0; index < headers.length; index++) {
+                const header = headers[index];
+                if(header.name == "api-version")
+                    apiVer = header.value;
+            }
+
+            chrome.tabs.sendMessage(object.tabId, {reason: "APIVerion", value: apiVer});
+        }
+    },
+    {urls: ["https://pony.town/*"]}, ['requestHeaders']
+  );

@@ -1,53 +1,27 @@
-function GetAPIVersionInScript(webScript)
+//Makes the web's script post a request then `snatches`
+//the script's API-Version value from the request's header in the background script (bgp.js)
+//The API-Version variable is hidden inside the web's script
+function MakePostRequest()
 {
-    //Find the api version variable in the web's script and exclude the value
-    var verIndex = webScript.indexOf(`"api-version"`); //Gives the index of the beginning of the substring
-    verIndex += `"api-version"`.length
-    while (webScript[verIndex] != '"') { //proceed to the variable's value
-        verIndex++;
-    }
-    verIndex++; //skip the value's first (")
-
-    //We're in the api version string(value)
-    apiVersion = '';
-    while (webScript[verIndex] != '"') {
-        apiVersion += webScript[verIndex];
-        verIndex++;
-    }
-}
-
-function readTextFile(file) //Gets the script's body
-{
-    var rawFile = new XMLHttpRequest();
-    rawFile.open("GET", file, true);
-    rawFile.onreadystatechange = function ()
+    const elements = document.getElementsByClassName("btn btn-lg btn-default ml-2");
+    if(elements.length == 0)
     {
-        if(rawFile.readyState === 4)
-        {
-            if(rawFile.status === 200 || rawFile.status == 0)
-            {
-                var allText = rawFile.responseText;
-                GetAPIVersionInScript(allText);
-            }
-        }
+        setTimeout(MakePostRequest, 1000); //Attempt to find button until you find anything
+        return;
     }
-    rawFile.send(null);
-}
 
-function GetWebScript()
-{
-    for (let index = 0; index < document.scripts.length; index++) {
-        const element = document.scripts[index];
+    var saveBtn;
+    for (let index = 0; index < elements.length; index++) {
+        var element = elements[index];
 
-        if(!element.src.includes("https://pony.town/assets/scripts/")) //If not the ponytown script then continue
-            continue;
-
-        return element;
+        if(element.ariaLabel == "Save character" || element.innerHTML == "Save");
+            saveBtn = element;
     }
+    saveBtn.click(); //Save button, send a save request through the web's script to get the API-version header, nasty way but they always change the script
 }
+MakePostRequest();
 
-var apiVersion;
-readTextFile(GetWebScript().src); //Fills the apiVersion variable
+var apiVersion; //Will be filled later by the background script
 
 function copyStringToClipboard (str) {
     // Create new element
@@ -73,7 +47,7 @@ function PostPony(accountId, ponyName, ponyInfo) //MAKE THIS FUNCTION ASYNC(futu
     xhr.open("POST", "https://pony.town/api/pony/save", true);
 
     console.log(`API VERSION: ${apiVersion}`)
-    xhr.setRequestHeader('api-version', apiVersion); //Used to be 'EQnjieBaSd' during version 0.1 of this extension
+    xhr.setRequestHeader('api-version', apiVersion); //Used to be 'EQnjieBaSd' during version 0.1 of this extension, already changed by version 0.2
     xhr.setRequestHeader('Content-Type', 'application/json'); //IMPORTANT, MADE ME SPENT HOUR OR TWO AAAHHHHH
 
     var body = {
@@ -103,6 +77,10 @@ function PostPony(accountId, ponyName, ponyInfo) //MAKE THIS FUNCTION ASYNC(futu
     xhr.send(JSON.stringify(body));
 }
 
+//The first export post request is made to catch the API-Version
+//After that all post requests are user made
+var firstExport = true; 
+
 //Pony Webrequests manager
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse)
 {
@@ -117,9 +95,21 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse)
             break;
 
         case "Export":
+            //Extension made post request, to catch the API-Version
+            if (firstExport) 
+            {
+                firstExport = !firstExport;
+                return;
+            }
+
+            //User made post request
             copyStringToClipboard(ponyInfo);
             alert(`${ponyName}'s info was copied to clipboard.\n`);
              break;
+
+        case "APIVerion":
+            apiVersion = message.value
+            break;
     
         default:
             alert("Received a message with an unimplemented handle");
