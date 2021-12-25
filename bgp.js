@@ -49,14 +49,20 @@
                 return;
 
             var apiVer;
+            var apiBid;
+
             const headers = object.requestHeaders;
             for (let index = 0; index < headers.length; index++) {
                 const header = headers[index];
+                
                 if(header.name == "api-version")
                     apiVer = header.value;
+                
+                if(header.name == "api-bid")
+                    apiBid = header.value;
             }
 
-            chrome.tabs.sendMessage(object.tabId, {reason: "APIVerion", value: apiVer});
+            chrome.tabs.sendMessage(object.tabId, {reason: "APIVerion", value: apiVer, bid: apiBid});
         }
     },
     {urls: ["https://pony.town/*"]}, ['requestHeaders']

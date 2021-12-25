@@ -6,7 +6,7 @@ function MakePostRequest()
     const elements = document.getElementsByClassName("btn btn-lg btn-default ml-2");
     if(elements.length == 0)
     {
-        setTimeout(MakePostRequest, 1000); //Attempt to find button until you find anything
+        setTimeout(MakePostRequest, 100); //Attempt to find button until you find anything
         return;
     }
 
@@ -21,7 +21,9 @@ function MakePostRequest()
 }
 MakePostRequest();
 
-var apiVersion; //Will be filled later by the background script
+//Will be filled later by the background script
+var apiVersion;
+var apiBid;
 
 function copyStringToClipboard (str) {
     // Create new element
@@ -42,12 +44,25 @@ function copyStringToClipboard (str) {
 
 function PostPony(accountId, ponyName, ponyInfo) //MAKE THIS FUNCTION ASYNC(future tasks, not a must)
 {
+    if(!accountId)
+    {
+        alert("Please login first");
+        return;
+    }
+
+    if(!apiVersion)
+    {
+        alert("Please open the edit tab");
+        return;
+    }
+
     //Automatically includes cookies
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "https://pony.town/api/pony/save", true);
 
     console.log(`API VERSION: ${apiVersion}`)
     xhr.setRequestHeader('api-version', apiVersion); //Used to be 'EQnjieBaSd' during version 0.1 of this extension, already changed by version 0.2
+    xhr.setRequestHeader('api-bid', apiBid); //New variable, currently not required but don't take risk, future versions might need it
     xhr.setRequestHeader('Content-Type', 'application/json'); //IMPORTANT, MADE ME SPENT HOUR OR TWO AAAHHHHH
 
     var body = {
@@ -108,7 +123,8 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse)
              break;
 
         case "APIVerion":
-            apiVersion = message.value
+            apiVersion = message.value;
+            apiBid = message.bid;
             break;
     
         default:
